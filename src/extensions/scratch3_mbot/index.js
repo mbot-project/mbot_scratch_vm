@@ -66,7 +66,7 @@ class Scratch3MBot {
                     text: formatMessage({
                         id: 'mbot.driveDirectionBlock',
                         default: 'drive to the [DIRECTION] at [SPEED] m/s',
-                        description: 'Drive the MBot forward'
+                        description: 'Drive the MBot in the specified direction'
                     }),
                     blockType: BlockType.COMMAND,
                     arguments: {
@@ -88,6 +88,20 @@ class Scratch3MBot {
                     }
                 },
                 {
+                    opcode: 'driveVel',
+                    text: formatMessage({
+                        id: 'mbot.driveVelBlock',
+                        default: 'drive at vx: [VX] vy: [VY] [THETA]°',
+                        description: 'Drive at the specified vx, vy, and theta'
+                    }),
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        VX:     { type: ArgumentType.NUMBER, defaultValue: 0.5 },
+                        VY:     { type: ArgumentType.NUMBER, defaultValue: 0.5 },
+                        THETA:  { type: ArgumentType.NUMBER, defaultValue: 0 },
+                    }
+                },
+                {
                     opcode: 'driveArc',
                     text: formatMessage({
                         id: 'mbot.driveArcBlock',
@@ -99,6 +113,19 @@ class Scratch3MBot {
                         ARCDIRECTION: { type: ArgumentType.STRING, menu: 'arcdirection', defaultValue: 'left' },
                         VX:           { type: ArgumentType.NUMBER, defaultValue: 0.5 },
                         RADIUS:       { type: ArgumentType.NUMBER, defaultValue: 1.0 }
+                    }
+                },
+                {
+                    opcode: 'driveTheta',
+                    text: formatMessage({
+                        id: 'mbot.driveThetaBlock',
+                        default: 'drive at [THETA]° at [SPEED] m/s',
+                        description: 'Drive the MBot at a given heading'
+                    }),
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        THETA: { type: ArgumentType.NUMBER, defaultValue: 0 },
+                        SPEED: { type: ArgumentType.NUMBER, defaultValue: 0.5 }
                     }
                 },
                 {
@@ -235,8 +262,7 @@ class Scratch3MBot {
     }
 
     detectObstacle(args) {
-        if (!this.mbot_scan?.data) return false;
-        if (typeof args.ANGLE !== 'number') return false;
+        if (!this.mbot_scan.data) return false;
         const dir = args.ANGLE * DEG_TO_RAD;
         const dist = args.DIST * 1.0;
         const sliceSize = 30 * DEG_TO_RAD;
@@ -248,12 +274,44 @@ class Scratch3MBot {
         return false;
     }
 
+    detectObstacleInDirection(args){
+        let angleDeg;
+        switch (args.DIRECTION){
+            case 'front': angleDeg = 0; break;
+            case 'left': angleDeg = 90; break;
+            case 'back': angleDeg = 180; break;
+            case 'right': angleDeg = 270; break;
+            default: return false;
+        }
+        return this.detectObstacle({
+            ANGLE: angleDeg,
+            DIST: args.DIST * 1.0
+        });
+    }
+
+    driveVel(args) {
+        const vx = args.VX * 1.0;
+        const vy = args.VY * 1.0 ;
+        const thetaRad = (args.THETA) * 1.0 * Math.PI / 180;
+
+        this.mbot.drive(vx,vy,thetaRad);
+    }
+
     driveArc(args) {
         const vx = args.VX * 1.0;
         let radius = args.RADIUS * 1.0;
         if (args.ARCDIRECTION === 'right') radius = -radius;
         const omega = vx / radius;
         this.mbot.drive(vx, 0, omega);
+    }
+
+    driveTheta(args) {
+        const thetaRad = (args.THETA) * 1.0 * Math.PI / 180;
+        const speed   = args.SPEED * 1.0;
+        const vx = speed * Math.cos(thetaRad);
+        const vy = speed * Math.sin(thetaRad);
+
+        this.mbot.drive(vx, vy, 0);
     }
 
     driveDirectionForDist(args) {
