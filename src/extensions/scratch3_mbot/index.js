@@ -91,14 +91,14 @@ class Scratch3MBot {
                     opcode: 'driveVel',
                     text: formatMessage({
                         id: 'mbot.driveVelBlock',
-                        default: 'drive at vx: [VX] vy: [VY] [THETA]°',
-                        description: 'Drive at the specified vx, vy, and theta'
+                        default: 'drive at vx: [VX] vy: [VY] wz: [WZ]°',
+                        description: 'Drive at the specified vx, vy, and wz'
                     }),
                     blockType: BlockType.COMMAND,
                     arguments: {
                         VX:     { type: ArgumentType.NUMBER, defaultValue: 0.5 },
                         VY:     { type: ArgumentType.NUMBER, defaultValue: 0.5 },
-                        THETA:  { type: ArgumentType.NUMBER, defaultValue: 0 },
+                        WZ:  { type: ArgumentType.NUMBER, defaultValue: 0 },
                     }
                 },
                 {
@@ -292,9 +292,9 @@ class Scratch3MBot {
     driveVel(args) {
         const vx = args.VX * 1.0;
         const vy = args.VY * 1.0 ;
-        const thetaRad = (args.THETA) * 1.0 * Math.PI / 180;
+        const wz = (args.WZ) * 1.0 * Math.PI / 180;
 
-        this.mbot.drive(vx,vy,thetaRad);
+        this.mbot.drive(vx,vy,wz);
     }
 
     driveArc(args) {
